@@ -1,22 +1,50 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { supabase } from '../../lib/supabase'
 
-type Librarian = { userID: number; firstName: string; lastName: string; email: string }
-
-const INITIAL: Librarian[] = [] // empty for now—will wire to Supabase later
+type Librarian = {
+  userid: number
+  firstname: string
+  lastname: string
+  email: string
+  usertype: string
+}
 
 export default function LibrariansPage() {
   const [q, setQ] = useState('')
+  const [data, setData] = useState<Librarian[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      setError(null)
+      const { data, error } = await supabase
+        .from('users') // table name in Supabase
+        .select('*')
+        .eq('usertype', 'librarian') // only librarians
+        .order('userid', { ascending: true })
+
+      if (cancelled) return
+      if (error) setError(error.message)
+      else setData((data as Librarian[]) || [])
+      setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase()
-    if (!term) return INITIAL
-    return INITIAL.filter(l =>
-      [l.firstName, l.lastName, l.email]
+    if (!term) return data
+    return data.filter(l =>
+      [l.firstname, l.lastname, l.email]
         .filter(Boolean)
         .some(x => x!.toLowerCase().includes(term))
     )
-  }, [q])
+  }, [q, data])
 
   return (
     <section className="space-y-4">
@@ -45,22 +73,24 @@ export default function LibrariansPage() {
               <th className="text-left p-3">First Name</th>
               <th className="text-left p-3">Last Name</th>
               <th className="text-left p-3">Email</th>
+              <th className="text-left p-3">User Type</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td className="p-3 text-slate-500" colSpan={4}>
-                  No librarians yet.
-                </td>
-              </tr>
+            {loading ? (
+              <tr><td className="p-3" colSpan={5}>Loading…</td></tr>
+            ) : error ? (
+              <tr><td className="p-3 text-red-600" colSpan={5}>Error: {error}</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td className="p-3 text-slate-500" colSpan={5}>No librarians found.</td></tr>
             ) : (
-              filtered.map((l) => (
-                <tr key={l.userID} className="border-t">
-                  <td className="p-3">{l.userID}</td>
-                  <td className="p-3">{l.firstName}</td>
-                  <td className="p-3">{l.lastName}</td>
+              filtered.map(l => (
+                <tr key={l.userid} className="border-t">
+                  <td className="p-3">{l.userid}</td>
+                  <td className="p-3">{l.firstname}</td>
+                  <td className="p-3">{l.lastname}</td>
                   <td className="p-3">{l.email}</td>
+                  <td className="p-3">{l.usertype}</td>
                 </tr>
               ))
             )}
