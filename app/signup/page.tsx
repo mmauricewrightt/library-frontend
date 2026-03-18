@@ -5,26 +5,46 @@ export default function SignupPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName]   = useState('')
   const [email, setEmail]         = useState('')
+  const [usertype, setUsertype]    = useState('')
   const [password, setPassword]   = useState('')
   const [confirm, setConfirm]     = useState('')
   const [message, setMessage]     = useState<string | null>(null)
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMessage(null)
 
-    // simple front-end validation
+    setUsertype("member")
     if (!firstName || !lastName || !email || !password || !confirm) {
       setMessage('Please fill in all fields.')
       return
     }
+
     if (password !== confirm) {
       setMessage('Passwords do not match.')
       return
     }
 
-    // UI only for now — later we’ll send to Supabase
-    setMessage('✅ Sign up info captured (UI only). Backend wiring comes next.')
+    console.log("ABout to go to backend0000000000000000000000000")
+
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, email, usertype, password })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setMessage(data.error)
+      } else {
+        setMessage('✅ Email sent successfully.')
+      }
+
+    } catch (err) {
+      setMessage('Something went wrong.')
+    }
   }
 
   return (
