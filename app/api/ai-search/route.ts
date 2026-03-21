@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     // ==========================================
     // 🤖 MODEL & INFERENCE
     // ==========================================
-    // Groq uses "chat.completions" format (same as OpenAI)
+    // Groq uses "chat.completions" format (same as OpenAI).
     const chatCompletion = await groq.chat.completions.create({
       // "llama-3.3-70b-versatile" is fast, smart, and free-tier friendly
       model: "llama-3.3-70b-versatile", 
