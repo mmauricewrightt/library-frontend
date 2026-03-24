@@ -120,11 +120,12 @@ export async function POST(req: Request) {
     try{
         await resend.emails.send({
         from: 'Library <onboarding@resend.dev>',
-        to: email,
+        to: "mmauricewrightt@gmail.com",
         subject: 'Welcome to the Library',
         html: `
-            <h2>Welcome, ${firstName}!</h2>
-            <p>Your account has been successfully created.</p>
+            <h2>New User to library database!</h2>
+            <p>Name: ${firstName} ${lastName}</p>
+            <p>Email: ${email}</p>
         `
         })
     }catch(err){
