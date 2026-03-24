@@ -28,7 +28,15 @@ const resend = new Resend(process.env.RESEND_API_KEY!)
 export async function POST(req: Request) {
 
   try {
-    const { firstName, lastName, email, usertype, password } = await req.json()
+    const formData = await req.formData()
+
+    const firstName = formData.get("firstName") as string
+    const lastName  = formData.get("lastName") as string
+    const email     = formData.get("email") as string
+    const password  = formData.get("password") as string
+
+    const image = formData.get("image") as File | null
+    const file  = formData.get("file") as File | null
 
     // ==========================
     // 🧪 1. VALIDATION SECTION
@@ -92,6 +100,61 @@ export async function POST(req: Request) {
     // ==========================
     // Inserting new user into Account table
 
+
+    // below is the code to get url for image and save to database
+
+    
+    console.log("Before image sorting")
+
+
+    let imagePath = null
+
+    if (image) {
+      imagePath = `profiles/${Date.now()}-${image.name}`
+    }
+
+    if (image && imagePath) {
+      const { error } = await supabase.storage
+        .from('Library_DB_files_imgs')
+        .upload(imagePath, image)
+
+      if (error) {
+        return NextResponse.json({ error: "image Upload failed" }, { status: 500 })
+      }
+    }
+
+    console.log("After image sorting")
+
+
+
+    // below is the code to get url for file and save to database
+
+    
+    console.log("Before file sorting")
+
+
+    let filePath = null
+
+    if (file) {
+      filePath = `files/${Date.now()}-${file.name}`
+    }
+
+    if (file && filePath) {
+      const { error } = await supabase.storage
+        .from('Library_DB_files_imgs')
+        .upload(filePath, file)
+
+      if (error) {
+        return NextResponse.json({ error: "file Upload failed" }, { status: 500 })
+      }
+    }
+
+    console.log("After file sorting")
+
+
+
+
+
     const { error: insertError } = await supabase
       .from('users')
       .insert([
@@ -100,7 +163,9 @@ export async function POST(req: Request) {
           lastname: lastName,
           email: email,
           usertype: 'member',
-          password: hashedPassword
+          password: hashedPassword,
+          profile_image: imagePath,
+          uploaded_file: filePath
         }
       ])
 

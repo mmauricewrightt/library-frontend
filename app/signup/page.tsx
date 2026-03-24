@@ -10,6 +10,9 @@ export default function SignupPage() {
   const [confirm, setConfirm]     = useState('')
   const [message, setMessage]     = useState<string | null>(null)
 
+  const [image, setImage] = useState<File | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMessage(null)
@@ -28,10 +31,19 @@ export default function SignupPage() {
     console.log("ABout to go to backend0000000000000000000000000")
 
     try {
+      const formData = new FormData()
+
+      formData.append("firstName", firstName)
+      formData.append("lastName", lastName)
+      formData.append("email", email)
+      formData.append("password", password)
+
+      if (image) formData.append("image", image)
+      if (file) formData.append("file", file)
+
       const res = await fetch('/api/signup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, usertype, password })
+        body: formData
       })
 
       const data = await res.json()
@@ -81,6 +93,23 @@ export default function SignupPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
+          />
+        </div>
+
+        <div>
+          <label className="block font-semibold mb-1">Profile Image (optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
+          />
+        </div>
+
+        <div>
+          <label className="block font-semibold mb-1">Upload File (optional)</label>
+          <input
+            type="file"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
         </div>
 
