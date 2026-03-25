@@ -1,12 +1,14 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState<string | null>(null)
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMessage(null)
 
@@ -15,8 +17,44 @@ export default function LoginPage() {
       return
     }
 
+    // ==========================
+    // 📤 SEND DATA TO BACKEND
+    // ==========================
+    console.log("Entering 📤 SEND DATA TO BACKEND")
+
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        password
+      })
+    })
+
+    // ==========================
+    // 📥 HANDLE RESPONSE
+    // ==========================
+    console.log("Entering 📥 HANDLE RESPONSE")
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      setMessage(data.error)
+    } else {
+      setMessage('✅ Valid Credentials')
+      localStorage.setItem("role", data.user.role)
+
+      // Redirect based on role
+      if (data.user.role === "admin") {
+        router.push('/admin')
+      } else {
+        router.push('/')
+      }
+    }
+
     // UI only — we’ll connect to Supabase later
-    setMessage('✅ Login info captured (UI only). Backend wiring comes next.')
   }
 
   return (
